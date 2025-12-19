@@ -6,5 +6,5 @@ FROM (
     SELECT CallID
     FROM fire_dep
     WHERE FDID = '31D04'
-		AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime
+		AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime
 ) AS temp_table;

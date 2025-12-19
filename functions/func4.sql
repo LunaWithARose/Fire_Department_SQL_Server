@@ -8,4 +8,4 @@ FROM fire_dep
 WHERE 
     CallGEOFDID = '31D04'
     AND FDID <> '31D04'
-    AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime;
+    AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime;

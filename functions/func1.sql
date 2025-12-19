@@ -4,4 +4,4 @@ SET @EndDateTime   = '2024-01-31 23:59:59';
 SELECT COUNT(DISTINCT CallID) AS `Total_Calls_In_District`
 FROM fire_dep
 WHERE CallGEOFDID = '31D04'
-  AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime;
+  AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime;

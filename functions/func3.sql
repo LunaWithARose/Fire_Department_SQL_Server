@@ -5,4 +5,4 @@ SELECT COUNT(DISTINCT CallID) AS call_count
 FROM fire_dep
 WHERE FDID = '31D04'
   AND CallGeoFDID = '31D04'
-  AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime;
+  AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime;

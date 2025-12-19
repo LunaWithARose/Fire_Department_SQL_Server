@@ -8,14 +8,14 @@ FROM fire_dep
 WHERE 
     CallGEOFDID <> '31D04'
     AND FDID = '31D04'
-    AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime
+    AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime
 ),
 
 FDID_IN_DISTRICT AS(
 SELECT COUNT(DISTINCT CallID) AS `Total_Calls_In_District`
 FROM fire_dep
 WHERE CallGEOFDID = '31D04'
-  AND CreateDateTime BETWEEN @StartDateTime AND @EndDateTime
+  AND StartDateTime BETWEEN @StartDateTime AND @EndDateTime
 )
 
 SELECT
