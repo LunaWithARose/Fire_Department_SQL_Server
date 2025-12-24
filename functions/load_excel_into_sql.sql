@@ -2,10 +2,10 @@
 SHOW VARIABLES LIKE 'secure_file_priv';
 
 -- ✅ Drop existing table to avoid conflicts
-DROP TABLE IF EXISTS fire_dep2;
+DROP TABLE IF EXISTS fire_dep;
 
 -- ✅ Create the fire_dep2 table with schema
-CREATE TABLE fire_dep2 (
+CREATE TABLE fire_dep (
     CallID                          VARCHAR(30),
     UnitNumber                      VARCHAR(10),
     ArrivalOrder                    VARCHAR(10),
@@ -24,11 +24,11 @@ CREATE TABLE fire_dep2 (
     LongitudeX                      DECIMAL(10,6),
     Location                        VARCHAR(150),
     Qualifier                       VARCHAR(30),
-    City                            VARCHAR(25),
+    City                            VARCHAR(40),
     Zip                             VARCHAR(20),
     EMDCode                         VARCHAR(20),
-    FinalCallPriority               VARCHAR(5),
-    InitialCallPriority             VARCHAR(5),
+    FinalCallPriority               VARCHAR(10),
+    InitialCallPriority             VARCHAR(10),
     CreateDatetime                  DATETIME,
     StartDatetime                   DATETIME,
     DispatchDateTime                DATETIME,
@@ -62,13 +62,14 @@ CREATE TABLE fire_dep2 (
 -- ✅ Bulk load CSV file
 -- NOTE: file must be inside the folder shown in secure_file_priv
 -- If you want to load from anywhere, use LOAD DATA LOCAL INFILE instead
-LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/January 2024 - practice.csv'
-INTO TABLE fire_dep2
+LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/2025-12-05_FireCADData.csv'
+INTO TABLE fire_dep
 FIELDS TERMINATED BY ',' 
 OPTIONALLY ENCLOSED BY '"' 
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES
 (
+    -- VARCHAR (safe to load directly)
     CallID,
     UnitNumber,
     ArrivalOrder,
@@ -83,8 +84,12 @@ IGNORE 1 LINES
     IncidentType,
     Quadrant,
     Station,
-    LatitudeY,
-    LongitudeX,
+
+    -- DECIMAL
+    @LatitudeY,
+    @LongitudeX,
+
+    -- VARCHAR
     Location,
     Qualifier,
     City,
@@ -92,32 +97,75 @@ IGNORE 1 LINES
     EMDCode,
     FinalCallPriority,
     InitialCallPriority,
-    CreateDatetime,
-    StartDatetime,
-    DispatchDateTime,
-    EnrouteDateTime,
-    ArriveDateTime,
-    AtPatientDatetime,
-    TransportDatetime,
-    AtHospitalDatetime,
-    TransferOfPatientCareTimeStamp,
-    DepartHospitalDatetime,
-    ClearDateTime,
-    Round,
-    `DispatchTime(Sec)`,
-    `TurnoutTime(Sec)`,
-    `TravelTime(Sec)`,
-    `DispatchToArrival(Sec)`,
-    `TotalResponseTime(Sec)`,
-    `TotalCallTime(Sec)`,
-    `TransportTime(Sec)`,
-    `HospitalDropOffTime(Sec)`,
-    `DispatchToAtPatient(Sec)`,
-    `ArrivalToAtPatient(Sec)`,
-    StartDateHour,
+
+    -- DATETIME
+    @CreateDatetime,
+    @StartDatetime,
+    @DispatchDateTime,
+    @EnrouteDateTime,
+    @ArriveDateTime,
+    @AtPatientDatetime,
+    @TransportDatetime,
+    @AtHospitalDatetime,
+    @TransferOfPatientCareTimeStamp,
+    @DepartHospitalDatetime,
+    @ClearDateTime,
+
+    -- INT
+    @Round,
+    @DispatchTime,
+    @TurnoutTime,
+    @TravelTime,
+    @DispatchToArrival,
+    @TotalResponseTime,
+    @TotalCallTime,
+    @TransportTime,
+    @HospitalDropOffTime,
+    @DispatchToAtPatient,
+    @ArrivalToAtPatient,
+
+    -- DATE PARTS
+    @StartDateHour,
     StartDateDay,
     StartDateMonth,
-    StartDateYear,
+    @StartDateYear,
+
+    -- VARCHAR
     IncidentFilter,
     CallFilter
-);
+)
+SET
+    -- DECIMAL
+    LatitudeY  = NULLIF(@LatitudeY, ''),
+    LongitudeX = NULLIF(@LongitudeX, ''),
+
+    -- DATETIME
+    CreateDatetime                 = NULLIF(@CreateDatetime, ''),
+    StartDatetime                  = NULLIF(@StartDatetime, ''),
+    DispatchDateTime               = NULLIF(@DispatchDateTime, ''),
+    EnrouteDateTime                = NULLIF(@EnrouteDateTime, ''),
+    ArriveDateTime                 = NULLIF(@ArriveDateTime, ''),
+    AtPatientDatetime              = NULLIF(@AtPatientDatetime, ''),
+    TransportDatetime              = NULLIF(@TransportDatetime, ''),
+    AtHospitalDatetime             = NULLIF(@AtHospitalDatetime, ''),
+    TransferOfPatientCareTimeStamp = NULLIF(@TransferOfPatientCareTimeStamp, ''),
+    DepartHospitalDatetime         = NULLIF(@DepartHospitalDatetime, ''),
+    ClearDateTime                  = NULLIF(@ClearDateTime, ''),
+
+    -- INT (response + metadata)
+    Round                          = NULLIF(@Round, ''),
+    `DispatchTime(Sec)`             = NULLIF(@DispatchTime, ''),
+    `TurnoutTime(Sec)`              = NULLIF(@TurnoutTime, ''),
+    `TravelTime(Sec)`               = NULLIF(@TravelTime, ''),
+    `DispatchToArrival(Sec)`        = NULLIF(@DispatchToArrival, ''),
+    `TotalResponseTime(Sec)`        = NULLIF(@TotalResponseTime, ''),
+    `TotalCallTime(Sec)`            = NULLIF(@TotalCallTime, ''),
+    `TransportTime(Sec)`            = NULLIF(@TransportTime, ''),
+    `HospitalDropOffTime(Sec)`      = NULLIF(@HospitalDropOffTime, ''),
+    `DispatchToAtPatient(Sec)`      = NULLIF(@DispatchToAtPatient, ''),
+    `ArrivalToAtPatient(Sec)`       = NULLIF(@ArrivalToAtPatient, ''),
+    StartDateHour                   = NULLIF(@StartDateHour, ''),
+    StartDateYear                   = NULLIF(@StartDateYear, '');
+
+
+

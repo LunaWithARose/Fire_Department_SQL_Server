@@ -1,1 +1,1 @@
-Select * from fire_dep;
+Select * from fire_dep WHERE CallGEOFDID = '31D04'

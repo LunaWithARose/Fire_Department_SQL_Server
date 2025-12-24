@@ -1,5 +1,5 @@
-SET @StartDateTime = '2024-01-01 00:00:00';
-SET @EndDateTime   = '2024-01-31 23:59:59';
+SET @StartDateTime = '2025-01-01 00:00:00';
+SET @EndDateTime   = '2026-01-01 00:00:00';
 
 SELECT COUNT(DISTINCT CallID) AS `Total_Calls_In_District`
 FROM fire_dep
