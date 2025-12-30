@@ -19,6 +19,7 @@ BaseData AS (
       AND CallGEOFDID = '31D04'
       AND Quadrant IN ('AD1218c', 'AD1118', 'AD1119c', 'AD1119d', 'AD1018b', 'AD1018c', 'AD1018d', 'AD1019', 'AD0918a', 'AD0918c', 'AD1919')
       AND UnitNumber REGEXP '^(E|BR|T|H|KCE|KCL|KCBR|L)'
+      AND FinalCallPriority IN ('1F', '2F', '3F', '4F')
 ),
 
 -- 2. Original statistics (before trimming)
