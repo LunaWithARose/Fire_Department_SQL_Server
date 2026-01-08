@@ -9,6 +9,7 @@ BaseUnits AS (
     SELECT
         f.CallId AS callid,
         f.UnitNumber,
+        f.ArrivalOrder,
         f.ArriveDateTime,
         f.`TotalResponseTime(Sec)` AS total_response_time_sec,
         s.firefighters_per_unit
@@ -29,27 +30,25 @@ BaseUnits AS (
       )
 ),
 
--- ======================================================
--- 2. Cumulative firefighter count per call
--- ======================================================
 RunningTotals AS (
     SELECT
         *,
         SUM(firefighters_per_unit) OVER (
             PARTITION BY callid
-            ORDER BY ArriveDateTime, UnitNumber
+            ORDER BY ArrivalOrder
             ROWS UNBOUNDED PRECEDING
         ) AS cumulative_firefighters
     FROM BaseUnits
 ),
 
 -- ======================================================
--- 3. Identify the unit that delivers the 16th firefighter
+-- 3. Identify the unit that delivers the 22nd firefighter
 -- ======================================================
 SixteenthFirefighter AS (
     SELECT
         callid,
         UnitNumber,
+        ArrivalOrder,
         ArriveDateTime,
         total_response_time_sec,
         cumulative_firefighters,
@@ -68,6 +67,7 @@ SELECT
     callid,
     UnitNumber                AS unit_delivering_16th_firefighter,
     ArriveDateTime            AS arrival_time_16th_firefighter,
+    ArrivalOrder              AS arrival_number,
     total_response_time_sec   AS total_response_time_sec_16th
 FROM SixteenthFirefighter
 WHERE rn = 1

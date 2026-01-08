@@ -6,6 +6,7 @@ SET @StartDateTime   = '2025-01-01 00:00:00';
 SET @EndDateTime     = '2026-01-01 00:00:00';
 SET @GoalTimeSeconds = 600;  -- example: 2 minutes
 SET @Sigma           = 3;
+SET @Percentile      = 0.9;
 
 WITH
 
@@ -17,9 +18,14 @@ BaseData AS (
     WHERE CreateDatetime BETWEEN @StartDateTime AND @EndDateTime
       AND `TravelTime(Sec)` >= 5
       AND CallGEOFDID = '31D04'
-      AND Quadrant NOT IN ('AD1218c', 'AD1118', 'AD1119c', 'AD1119d', 'AD1018b', 'AD1018c', 'AD1018d', 'AD1019', 'AD0918a', 'AD0918c', 'AD1919')
+      AND Quadrant NOT IN ('AD1218c', 'AD1118', 'AD1119c', 'AD1119d', 
+						   'AD1018b', 'AD1018c', 'AD1018d', 'AD1019', 
+                           'AD0918a', 'AD0918c', 'AD1919')
       AND UnitNumber REGEXP '^(M|A)'
       AND FinalCallPriority IN ('1F', '2F', '3F', '4F')
+      AND InitialCallType IN ('AWWX', 'MCI', 'MEDX', 'MVCE', 'MVCF', 'MVCM', 
+							 'MVCP', 'MVCT', 'AIDP', 'COAM', 'MAA', 'MAA', 
+                             'MED1', 'MED2')
 ),
 
 -- 2. Original statistics (before trimming)
@@ -75,15 +81,35 @@ MedianCalc AS (
 -- 6. 90th percentile calculation
 Percentile90 AS (
     SELECT
-        travel_time_sec AS p90_travel_time
+        lo_val + (hi_val - lo_val) * frac AS p90_travel_time
     FROM (
         SELECT
-            travel_time_sec,
-            ROW_NUMBER() OVER (ORDER BY travel_time_sec) AS rn,
-            COUNT(*) OVER () AS total
-        FROM TrimmedData
-    ) x
-    WHERE rn = CEILING(0.9 * total)
+            MAX(CASE WHEN rn = lo THEN travel_time_sec END) AS lo_val,
+            MAX(CASE WHEN rn = hi THEN travel_time_sec END) AS hi_val,
+            MAX(frac) AS frac
+        FROM (
+            SELECT
+                travel_time_sec,
+                rn,
+                lo,
+                hi,
+                frac
+            FROM (
+                SELECT
+                    travel_time_sec,
+                    ROW_NUMBER() OVER (ORDER BY travel_time_sec) - 1 AS rn,
+                    FLOOR(@Percentile  * (cnt - 1)) AS lo,
+                    CEILING(@Percentile  * (cnt - 1)) AS hi,
+                    (@Percentile  * (cnt - 1)) - FLOOR(@Percentile  * (cnt - 1)) AS frac
+                FROM (
+                    SELECT
+							travel_time_sec,
+                        COUNT(*) OVER () AS cnt
+                    FROM TrimmedData
+                ) c
+            ) r
+        ) s
+    ) f
 ),
 
 -- 7. Goal-time percentage

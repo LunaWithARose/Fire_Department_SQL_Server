@@ -10,10 +10,10 @@ VALUES
     ('T', 1),     -- Tenders
     ('BR', 2),    -- Brush
     ('KCBR', 3),  -- King County Brush
-    ('M', 2),
-    ('A', 2),
-    ('CH', 1),
-    ('DC', 1),
-    ('LT', 1)
+    ('M', 2),     -- Medic
+    ('A', 2),     -- Aid
+    ('CH', 1),    -- Chief
+    ('DC', 1),    -- Deputy Chief
+    ('LT', 1)     -- I cant spell this right now 
     
     

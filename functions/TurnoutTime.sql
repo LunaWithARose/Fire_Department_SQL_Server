@@ -4,8 +4,9 @@
 
 SET @StartDateTime   = '2025-01-01 00:00:00';
 SET @EndDateTime     = '2026-01-01 00:00:00';
-SET @GoalTimeSeconds = 120;  -- example: 2 minutes
+SET @GoalTimeSeconds = 120; 
 SET @Sigma           = 3;
+SET @Percentile      = 0.9;
 
 WITH
 
@@ -15,8 +16,12 @@ BaseData AS (
         `TurnoutTime(Sec)` AS turnout_time_sec
     FROM fire_dep
     WHERE CreateDatetime BETWEEN @StartDateTime AND @EndDateTime
-      AND `TurnoutTime(Sec)` >= 5
-      AND FDID = '31D04'
+      AND `TurnoutTime(Sec)` >= 1 -- knock out bad data
+      AND FDID = '31D04'  -- Our district units??
+      AND FinalCallPriority IN ('1F', '2F', '3F', '4F')  -- is it within the priority calls?
+	  AND UnitNumber IN ('A40', 'A41', 'A42', 'A43', 'A43A', 'B41', 
+						 'B42', 'B43', 'BR42', 'BR43', 'E40', 'E41', 
+                         'E42', 'E43', 'E43A', 'MSO43', 'TN43')
 ),
 
 -- 2. Original statistics (before trimming)
@@ -69,19 +74,41 @@ MedianCalc AS (
     GROUP BY total
 ),
 
--- 6. 90th percentile calculation
+-- 6. 90th percentile calculation    -- Long stupid way around not having percent_cont :(
 Percentile90 AS (
     SELECT
-        turnout_time_sec AS p90_turnout_time
+        lo_val + (hi_val - lo_val) * frac AS p90_turnout_time
     FROM (
         SELECT
-            turnout_time_sec,
-            ROW_NUMBER() OVER (ORDER BY turnout_time_sec) AS rn,
-            COUNT(*) OVER () AS total
-        FROM TrimmedData
-    ) x
-    WHERE rn = CEILING(0.9 * total)
+            MAX(CASE WHEN rn = lo THEN turnout_time_sec END) AS lo_val,
+            MAX(CASE WHEN rn = hi THEN turnout_time_sec END) AS hi_val,
+            MAX(frac) AS frac
+        FROM (
+            SELECT
+                turnout_time_sec,
+                rn,
+                lo,
+                hi,
+                frac
+            FROM (
+                SELECT
+                    turnout_time_sec,
+                    ROW_NUMBER() OVER (ORDER BY turnout_time_sec) - 1 AS rn,
+                    FLOOR(@Percentile  * (cnt - 1)) AS lo,
+                    CEILING(@Percentile  * (cnt - 1)) AS hi,
+                    (@Percentile  * (cnt - 1)) - FLOOR(@Percentile  * (cnt - 1)) AS frac
+                FROM (
+                    SELECT
+                        turnout_time_sec,
+                        COUNT(*) OVER () AS cnt
+                    FROM TrimmedData
+                ) c
+            ) r
+        ) s
+    ) f
 ),
+
+
 
 -- 7. Goal-time percentage
 GoalStats AS (
